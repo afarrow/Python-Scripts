@@ -9,45 +9,45 @@ from send2trash import send2trash
 send_for_future_iters = ''
 
 def mergepdfs(root, recursive):
-    pdfFiles = {}
+    """Merges all pdfs with page numbers located in root"""
+    pdfs = {}
     # Get all the PDF filenames
     for filename in os.listdir(root):
         m = re.match(r'(.*?)(p\d+)\.pdf', filename, re.I)
         # Group them by filename for easier merging later
         if m is not None:
-            if m.group(1) in pdfFiles:
-                pdfFiles[m.group(1)].append(filename)
+            if m.group(1) in pdfs:
+                pdfs[m.group(1)].append(filename)
             else:
-                pdfFiles[m.group(1)] = [filename]
+                pdfs[m.group(1)] = [filename]
+    # Sort the pdfs so they're in the right order when merged
+    for k in pdfs:
+        pdfs[k].sort(key=sort_by_page_number)
 
-    for k in pdfFiles:
-        pdfFiles[k].sort(key=sort_by_page_number)
-
-    if pdfFiles == {} and not recursive:
+    if pdfs == {} and not recursive:
         print('There are no pdf files to merge in this directory!')
         print('Make sure the file names include p# where # is the page',
               ' number you want the file to be in the new document')
         print('Example: testp1.pdf, testp2.pdf & test3.pdf would be',
               ' merged to create test.pdf where the order is p1->p2->p3')
         return
-    elif pdfFiles == {} and recursive:
+    elif pdfs == {} and recursive:
         print('No pdf files to merge found in %s' % root)
         return
 
     # Looping through all pdf files with multiple pages and saving
     # them as new combined pdfs.
-    for k in pdfFiles:
-        pdfWriter = PyPDF2.PdfFileWriter()
-        m = re.match(r'(.*?)(p\d)\.pdf', pdfFiles[k][0])
-        
+    for k in pdfs:
+        pdf_writer = PyPDF2.PdfFileWriter()
+        m = re.match(r'(.*?)(p\d)\.pdf', pdfs[k][0])
         # Adding all the pages in the various pdf files to a new pdf file
-        for pdf in pdfFiles[k]:
+        for pdf in pdfs[k]:
             print('Opening ' + os.path.join(root, pdf))
-            pdfFileObj = open(os.path.join(root, pdf), 'rb')
-            pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
-            for pageNum in range(pdfReader.numPages):
-                pageObj = pdfReader.getPage(pageNum)
-                pdfWriter.addPage(pageObj)
+            pdf_file_obj = open(os.path.join(root, pdf), 'rb')
+            pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
+            for page_num in range(pdf_reader.numPages):
+                page_obj = pdf_reader.getPage(page_num)
+                pdf_writer.addPage(page_obj)
 
         savepath = os.path.join(root, m.group(1) + '.pdf')
         if os.path.exists(savepath):
@@ -57,9 +57,9 @@ def mergepdfs(root, recursive):
                 continue # Skipping the save part
 
         print('Saving %s to %s' % (m.group(1) + '.pdf', root))
-        pdfOutput = open(savepath, 'wb')
-        pdfWriter.write(pdfOutput)
-        pdfOutput.close()
+        pdf_output = open(savepath, 'wb')
+        pdf_writer.write(pdf_output)
+        pdf_output.close()
 
     global send_for_future_iters
     if send_for_future_iters == '' and recursive:
@@ -86,9 +86,9 @@ def mergepdfs(root, recursive):
             ans = 'n'
 
     if ans == 'y':
-        for k in pdfFiles:
-            for x in pdfFiles[k]:
-                trashfile = os.path.join(root, x)
+        for k in pdfs:
+            for old_pdf in pdfs[k]:
+                trashfile = os.path.join(root, old_pdf)
                 print('Trashing: ' + trashfile)
                 send2trash(trashfile)
 
@@ -112,7 +112,7 @@ def get_answer(message, options):
     if len(options) == 1:
         invalid_msg = 'Enter %s to continue' % options[0]
     elif len(options) == 2:
-        invalid_msg =  'Enter %s or %s to continue' % (options[0], options[1])
+        invalid_msg = 'Enter %s or %s to continue' % (options[0], options[1])
     else:
         invalid_msg = 'Enter '
         for option in options[:-2]:
@@ -133,7 +133,7 @@ def main():
         sys.exit()
 
     filepath = sys.argv[1]
-    #Recombining filepath if it was split because of spaces
+    # Recombining filepath if it was split because of spaces
     for arg in sys.argv[2:]:
         filepath += ' ' + arg
 
@@ -154,4 +154,3 @@ def main():
 
 
 main()
-
