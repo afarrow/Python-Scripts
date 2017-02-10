@@ -1,3 +1,10 @@
+"""
+A simple python script that recursively merges all pdf files in a folder
+and its subfolders. Looks for files with the format _____p#.pdf
+where _____ is a common name and p# is the page number that the pdf should
+be in the combined filed
+
+"""
 import os
 import re
 import sys
@@ -9,7 +16,15 @@ from send2trash import send2trash
 send_for_future_iters = ''
 
 def mergepdfs(root, recursive):
-    """Merges all pdfs with page numbers located in root"""
+    """
+    Merges all pdfs with page numbers located in root
+    Also optionally trashes the old files depending on user input
+
+    Args:
+        root: The folder to search for pdfs to merge
+        recursive: A Boolean value, True if method is being called recursively
+                   (via the recursive_merge method), False otherwise
+    """
     pdfs = {}
     # Get all the PDF filenames
     for filename in os.listdir(root):
@@ -29,8 +44,13 @@ def mergepdfs(root, recursive):
         else:
             del_items.append(k)
 
+    if del_items != []:
+        print("Didn't combine the follow pdfs because only 1 page was found:")
     # Deleting lists that only contain 1 pdf
     for item in del_items:
+        assert len(pdfs[item]) == 1, 'Should only delete items with'\
+                                     + ' length == 1: ' + str(pdfs[item])
+        print('   ' + pdfs[item][0])
         del pdfs[item]
 
     if pdfs == {} and not recursive:
@@ -46,26 +66,36 @@ def mergepdfs(root, recursive):
 
     # Looping through all pdf files with multiple pages and saving
     # them as new combined pdfs.
+    print('In folder: '+root)
+    print('Combining and saving pdfs:')
     for k in pdfs:
         pdf_writer = PyPDF2.PdfFileWriter()
         m = re.match(r'(.*?)(p\d)\.pdf', pdfs[k][0])
-        # Adding all the pages in the various pdf files to a new pdf file
-        for pdf in pdfs[k]:
-            print('Opening ' + os.path.join(root, pdf))
-            pdf_file_obj = open(os.path.join(root, pdf), 'rb')
-            pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
-            for page_num in range(pdf_reader.numPages):
-                page_obj = pdf_reader.getPage(page_num)
-                pdf_writer.addPage(page_obj)
 
         savepath = os.path.join(root, m.group(1) + '.pdf')
         if os.path.exists(savepath):
             ans = get_answer('WARNING: A file of the name %s already exists.'
                              % savepath + ' Overwrite it? (y/n)', ['y', 'n'])
             if ans == 'n':
-                continue # Skipping the save part
-
-        print('Saving %s to %s' % (m.group(1) + '.pdf', root))
+                continue # Skip combining and saving the pdf
+            else:
+                send2trash(savepath) # Sending to trash instead of overwriting
+                                     # in case of user error
+        first_page = True
+        # Adding all the pages in the various pdf files to a new pdf file
+        for pdf in pdfs[k]:
+            if first_page:
+                print('   ' + pdf)
+                first_page = False
+            else:
+                print('   + ' + pdf)
+            pdf_file_obj = open(os.path.join(root, pdf), 'rb')
+            pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
+            for page_num in range(pdf_reader.numPages):
+                page_obj = pdf_reader.getPage(page_num)
+                pdf_writer.addPage(page_obj)
+        print('   = ' + m.group(1) + '.pdf\n')
+        # Saving the file
         pdf_output = open(savepath, 'wb')
         pdf_writer.write(pdf_output)
         pdf_output.close()
@@ -95,27 +125,48 @@ def mergepdfs(root, recursive):
             ans = 'n'
 
     if ans == 'y':
+        print('Trashing the following files in %s:' % root)
         for k in pdfs:
             for old_pdf in pdfs[k]:
-                trashfile = os.path.join(root, old_pdf)
-                print('Trashing: ' + trashfile)
-                send2trash(trashfile)
+                print('   ' + old_pdf)
+                send2trash(os.path.join(root, old_pdf))
 
 def recursive_merge(dirpath):
-    """Calls the mergepdfs function for all folders within dirpath"""
+    """
+    Calls the mergepdfs function for all folders within dirpath
+    
+    Args:
+        dirpath: The root that contains all the folders to recursively visit
+    """
     for root, dirs, files in os.walk(dirpath):
         mergepdfs(root, True)
 
 def sort_by_page_number(filename):
     """
     Returns the page number of the pdf as an int
-    Used for sorting files by page # so they are in the correct order
+    Used for sorting files by page number so they are in the correct order
+
+    Args:
+        filename: The filename to extract the page number from
+
+    Returns:
+        The page number found in the filename, returned as an int
     """
     return int(re.match(r'.*?p(\d+)\.pdf', filename, re.I).group(1))
 
 def get_answer(message, options):
-    """Gets an answer to message that is within the accepted options list"""
+    """
+    Gets an answer to message that is within the accepted options list
+
+    Args:
+        message: The message to prompt the user with
+        options: A list containing the acceptable options
+
+    Returns:
+        The option the user picked from the list of options
+    """
     assert len(options) > 0, 'options should have a length of > 0'
+    assert isinstance(options, list), 'options should be a list'
     print(message)
     invalid_msg = ''
     if len(options) == 1:
