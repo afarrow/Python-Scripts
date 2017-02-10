@@ -2,8 +2,7 @@
 A simple python script that recursively merges all pdf files in a folder
 and its subfolders. Looks for files with the format _____p#.pdf
 where _____ is a common name and p# is the page number that the pdf should
-be in the combined filed
-
+be in the combined pdf
 """
 import os
 import re
@@ -66,7 +65,7 @@ def mergepdfs(root, recursive):
 
     # Looping through all pdf files with multiple pages and saving
     # them as new combined pdfs.
-    print('In folder: '+root)
+    print('\nIn folder: '+root)
     print('Combining and saving pdfs:')
     for k in pdfs:
         pdf_writer = PyPDF2.PdfFileWriter()
