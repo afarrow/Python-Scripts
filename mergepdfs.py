@@ -20,9 +20,18 @@ def mergepdfs(root, recursive):
                 pdfs[m.group(1)].append(filename)
             else:
                 pdfs[m.group(1)] = [filename]
+
+    del_items = []
     # Sort the pdfs so they're in the right order when merged
     for k in pdfs:
-        pdfs[k].sort(key=sort_by_page_number)
+        if len(pdfs[k]) > 1:
+            pdfs[k].sort(key=sort_by_page_number)
+        else:
+            del_items.append(k)
+
+    # Deleting lists that only contain 1 pdf
+    for item in del_items:
+        del pdfs[item]
 
     if pdfs == {} and not recursive:
         print('There are no pdf files to merge in this directory!')
