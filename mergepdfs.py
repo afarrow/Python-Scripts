@@ -133,7 +133,7 @@ def mergepdfs(root, recursive):
 def recursive_merge(dirpath):
     """
     Calls the mergepdfs function for all folders within dirpath
-    
+
     Args:
         dirpath: The root that contains all the folders to recursively visit
     """
