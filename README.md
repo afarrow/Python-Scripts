@@ -59,11 +59,11 @@ In the folder where the script is located, run:
 ```
 python3 stock-cal.py
 ```
-This will look for a `holdings.txt` file in the same directory as the script. To use another holdings file, run:
+This will look for a file named `holdings.txt` in the same directory as the script. To use another holdings file, run:
 ```
 python3 stock-cal.py -f /path/to/file
 ```
-where /path/to/file is the location of the file
+where /path/to/file is the location of the file.
 
 #### Holdings file format:
 The script expects the holdings file to be formatted in the form of `symbol - shares_held`, 1 per row. So an acceptable holdings file looks like:
