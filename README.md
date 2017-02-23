@@ -45,3 +45,30 @@ In the folder where the script is located, run:
 python3 mergepdfs.py /path/to/folder/
 ```
 where /path/to/folder/ is the location of the folder containing the pdfs. The script will prompt the user for decisions on trashing and recursion during runtime.
+
+## stock-cal.py
+A script for determining the current value of a group of stocks. It reads a holdings file to get the ticker symbol and shares held of a group of stocks, gets the current prices of those stocks and then displays the current values in a readable form. The script defaults to assuming the holdings file is a file called `holdings.txt` but it can be pointed to other files via command line arguments.
+
+### Requirements
+* Python 3
+* [requests](https://pypi.python.org/pypi/requests)
+  * It can be installed using pip with: `pip install requests`
+  
+### To Run:
+In the folder where the script is located, run:
+```
+python3 stock-cal.py
+```
+This will look for a `holdings.txt` file in the same directory as the script. To use another holdings file, run:
+```
+python3 stock-cal.py -f /path/to/file
+```
+where /path/to/file is the location of the file
+
+#### Holdings file format:
+The script expects the holdings file to be formatted in the form of `symbol - shares_held`, 1 per row. So an acceptable holdings file looks like:
+```
+AAPL - 20
+GOOG - 8
+TSLA - 23
+```
