@@ -44,7 +44,7 @@ def mergepdfs(root, recursive):
             del_items.append(k)
 
     if del_items != []:
-        print("Didn't combine the follow pdfs because only 1 page was found:")
+        print("Didn't combine the following pdfs because only 1 page was found:")
     # Deleting lists that only contain 1 pdf
     for item in del_items:
         assert len(pdfs[item]) == 1, 'Should only delete items with'\
