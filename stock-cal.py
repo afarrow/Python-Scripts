@@ -39,15 +39,14 @@ def read_holdings(file_loc):
         the number of shares held
     """
     print('Reading the holdings file...')
-    txt_regex = re.compile(r'(\w{1,5})\s*-\s*(\d+\.?\d*)')
-    txt_file = open(file_loc)
-    txt_file_contents = txt_file.read()
-    result = txt_regex.findall(txt_file_contents)
-    holdings = {}
-    for symbol, amount in result:
-        holdings[symbol] = amount
+    with open(file_loc, 'r') as txt_file:
+        txt_regex = re.compile(r'^(\w{1,5})\s*-\s*(\d+\.?\d*)$', re.M)
+        matches = txt_regex.findall(txt_file.read())
+        holdings = {}
+        for symbol, amount in matches:
+            holdings[symbol] = amount
 
-    return holdings
+        return holdings
 
 def download_info(url, indent):
     """
@@ -76,7 +75,7 @@ def download_info(url, indent):
 def sanity_check(holdings, download):
     """
     The Google Finance API sometimes doesn't return info for all symbols
-    (no idea what that's the case). This function checks to see if info
+    (no idea why that's the case). This function checks to see if info
     for all symbols was downloaded and if not, calls a function that tries
     to download the missing info.
 
@@ -244,7 +243,7 @@ def main():
     # Removing the trailing comma
     url = url[:-1]
 
-    print('Url: '+url)
+    print('Url: ' + url)
 
     result = download_info(url, False)
 
